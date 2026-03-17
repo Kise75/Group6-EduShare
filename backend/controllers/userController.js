@@ -15,6 +15,7 @@ const serializeUser = (user) => ({
   username: user.username,
   major: user.major,
   role: user.role,
+  status: user.status,
   profileImage: user.profileImage,
   rating: user.rating,
   totalRatings: user.totalRatings,
@@ -96,7 +97,10 @@ const changePassword = async (req, res) => {
 // Get user listings
 const getUserListings = async (req, res) => {
   try {
-    const listings = await Listing.find({ seller: req.params.id }).sort({ createdAt: -1 });
+    const listings = await Listing.find({
+      seller: req.params.id,
+      visibility: { $ne: 'Hidden' },
+    }).sort({ createdAt: -1 });
 
     res.json(listings);
   } catch (error) {
@@ -107,7 +111,10 @@ const getUserListings = async (req, res) => {
 // Get user reviews
 const getUserReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ reviewee: req.params.id })
+    const reviews = await Review.find({
+      reviewee: req.params.id,
+      status: { $ne: 'Hidden' },
+    })
       .populate('reviewer', 'name profileImage')
       .sort({ createdAt: -1 });
 

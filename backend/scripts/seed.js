@@ -53,7 +53,7 @@ const run = async () => {
       },
       {
         name: 'Minh Tran',
-        email: 'john@edushare.dev',
+        email: 'minh@edushare.dev',
         password,
         major: 'Computer Science',
         emailVerified: true,
@@ -62,7 +62,7 @@ const run = async () => {
       },
       {
         name: 'Phuong Nguyen',
-        email: 'jane@edushare.dev',
+        email: 'phuong@edushare.dev',
         password,
         major: 'Mechanical Engineering',
         emailVerified: true,
@@ -71,7 +71,7 @@ const run = async () => {
       },
       {
         name: 'Linh Vo',
-        email: 'alice@edushare.dev',
+        email: 'linh@edushare.dev',
         password,
         major: 'Business Administration',
         emailVerified: true,
@@ -391,15 +391,40 @@ const run = async () => {
       meetup: meetupCompleted._id,
     });
 
+    listings[listings.length - 1].reportCount = 1;
+    await listings[listings.length - 1].save();
+
+    await Report.create([
+      {
+        reporter: buyerA._id,
+        targetType: 'listing',
+        targetListing: listings[listings.length - 1]._id,
+        targetUser: sellerB._id,
+        reason: 'Misleading description',
+        details: 'The attached notes look incomplete compared with the title.',
+        status: 'Open',
+      },
+      {
+        reporter: sellerA._id,
+        targetType: 'user',
+        targetUser: sellerB._id,
+        reason: 'Unsafe meetup behavior',
+        details: 'There were repeated last-minute schedule changes without notice.',
+        status: 'Reviewed',
+        actionTaken: 'warning',
+        resolutionNote: 'Admin contacted both sides and documented the behavior.',
+      },
+    ]);
+
     sellerA.rating = 5;
     sellerA.totalRatings = 1;
     await sellerA.save();
 
     console.log('Seed completed');
     console.log('Sample login: admin / 123456');
-    console.log('Sample login: jane@edushare.dev / 123456');
-    console.log('Sample login: john@edushare.dev / 123456');
-    console.log('Sample login: alice@edushare.dev / 123456');
+    console.log('Sample login: phuong@edushare.dev / 123456');
+    console.log('Sample login: minh@edushare.dev / 123456');
+    console.log('Sample login: linh@edushare.dev / 123456');
     console.log(`Sample completed meetup id: ${meetupCompleted._id}`);
     console.log(`Sample pending meetup id: ${meetupPending._id}`);
   } catch (error) {

@@ -37,6 +37,25 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
+    status: {
+      type: String,
+      enum: ['Active', 'Banned'],
+      default: 'Active',
+    },
+    banReason: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    bannedAt: {
+      type: Date,
+      default: null,
+    },
+    bannedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     profileImage: {
       type: String,
       default: null,

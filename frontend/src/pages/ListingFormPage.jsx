@@ -29,6 +29,7 @@ function ListingFormPage() {
   const [suggestionError, setSuggestionError] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const canSelectReservedStatus = isEdit && form.status === "Reserved";
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -244,9 +245,14 @@ function ListingFormPage() {
               <label>Listing Status</label>
               <select value={form.status} onChange={(event) => handleChange("status", event.target.value)}>
                 <option value="Active">Available</option>
-                <option value="Reserved">Reserved</option>
+                {canSelectReservedStatus ? <option value="Reserved">Reserved</option> : null}
                 <option value="Sold">Sold</option>
               </select>
+              {!canSelectReservedStatus ? (
+                <p className="field-hint">
+                  Reserved state is controlled by the buyer reservation flow and meetup workflow.
+                </p>
+              ) : null}
             </>
           ) : (
             <>

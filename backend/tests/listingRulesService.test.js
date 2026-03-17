@@ -1,7 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { LISTING_STATUS, canReserveListing, canTransitionListingStatus } = require('../services/listingRulesService');
+const {
+  LISTING_STATUS,
+  LISTING_VISIBILITY,
+  canReserveListing,
+  canTransitionListingStatus,
+} = require('../services/listingRulesService');
 
 test('listing status transitions follow reservation workflow', () => {
   assert.equal(canTransitionListingStatus(LISTING_STATUS.ACTIVE, LISTING_STATUS.RESERVED), true);
@@ -19,4 +24,16 @@ test('sold listings cannot be reserved again', () => {
   const result = canReserveListing(soldListing, 'buyer-1');
   assert.equal(result.allowed, false);
   assert.match(result.reason, /Sold listings/);
+});
+
+test('hidden listings are excluded from reservation flow', () => {
+  const hiddenListing = {
+    seller: 'seller-1',
+    status: LISTING_STATUS.ACTIVE,
+    visibility: LISTING_VISIBILITY.HIDDEN,
+  };
+
+  const result = canReserveListing(hiddenListing, 'buyer-1');
+  assert.equal(result.allowed, false);
+  assert.match(result.reason, /Hidden listings/);
 });

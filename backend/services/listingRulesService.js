@@ -4,6 +4,11 @@ const LISTING_STATUS = {
   SOLD: 'Sold',
 };
 
+const LISTING_VISIBILITY = {
+  VISIBLE: 'Visible',
+  HIDDEN: 'Hidden',
+};
+
 const isTerminalStatus = (status) => status === LISTING_STATUS.SOLD;
 
 const canTransitionListingStatus = (currentStatus, nextStatus) => {
@@ -35,6 +40,10 @@ const canReserveListing = (listing, actorId) => {
     return { allowed: false, reason: 'Sellers cannot reserve their own listing' };
   }
 
+  if (listing.visibility === LISTING_VISIBILITY.HIDDEN) {
+    return { allowed: false, reason: 'Hidden listings cannot be reserved' };
+  }
+
   if (listing.status === LISTING_STATUS.SOLD) {
     return { allowed: false, reason: 'Sold listings cannot be reserved' };
   }
@@ -48,6 +57,7 @@ const canReserveListing = (listing, actorId) => {
 
 module.exports = {
   LISTING_STATUS,
+  LISTING_VISIBILITY,
   canReserveListing,
   canTransitionListingStatus,
   isTerminalStatus,

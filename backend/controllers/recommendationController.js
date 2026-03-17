@@ -23,6 +23,7 @@ const getHomeRecommendations = async (req, res) => {
     const [candidates, recentItems] = await Promise.all([
       Listing.find({
         status: 'Active',
+        visibility: { $ne: 'Hidden' },
         ...(req.userId ? { seller: { $ne: req.userId } } : {}),
       })
         .populate('seller', 'name rating profileImage emailVerified')
@@ -65,6 +66,7 @@ const getRelatedRecommendations = async (req, res) => {
       Listing.find({
         _id: { $ne: listingId },
         status: 'Active',
+        visibility: { $ne: 'Hidden' },
       })
         .populate('seller', 'name rating profileImage emailVerified')
         .sort({ createdAt: -1 })

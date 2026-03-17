@@ -13,6 +13,10 @@ function ProfilePage() {
   const [listings, setListings] = useState([]);
   const [campusLocations, setCampusLocations] = useState([]);
   const [trustProfile, setTrustProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [deletingListingId, setDeletingListingId] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -33,8 +37,9 @@ function ProfilePage() {
       }
 
       try {
+        setLoading(true);
         const [listingResponse, trustResponse, locationResponse] = await Promise.all([
-          api.get(`/users/${user.id}/listings`),
+          api.get("/listings/user/listings"),
           api.get(`/users/${user.id}/trust`),
           api.get("/meetups/campus-locations"),
         ]);
@@ -44,6 +49,8 @@ function ProfilePage() {
         setCampusLocations(locationResponse.data || []);
       } catch (requestError) {
         setError(parseApiError(requestError, "Cannot load profile page"));
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -54,12 +61,15 @@ function ProfilePage() {
     event.preventDefault();
     setError("");
     setSuccess("");
+    setSavingProfile(true);
     try {
       const response = await api.put("/users/profile", profile);
       setUser(response.data.user);
       setSuccess("Profile updated successfully.");
     } catch (requestError) {
       setError(parseApiError(requestError, "Cannot update profile"));
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -67,21 +77,32 @@ function ProfilePage() {
     event.preventDefault();
     setError("");
     setSuccess("");
+    setSavingPassword(true);
     try {
       await api.post("/users/change-password", passwordForm);
       setSuccess("Password changed successfully.");
       setPasswordForm({ currentPassword: "", newPassword: "" });
     } catch (requestError) {
       setError(parseApiError(requestError, "Cannot change password"));
+    } finally {
+      setSavingPassword(false);
     }
   };
 
   const deleteListing = async (listingId) => {
+    const confirmed = window.confirm("Delete this listing permanently?");
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingListingId(listingId);
     try {
       await api.delete(`/listings/${listingId}`);
       setListings((prev) => prev.filter((item) => item._id !== listingId));
     } catch (requestError) {
       setError(parseApiError(requestError, "Cannot delete listing"));
+    } finally {
+      setDeletingListingId("");
     }
   };
 
@@ -167,8 +188,8 @@ function ProfilePage() {
               ))}
             </div>
 
-            <button className="btn btn-primary" type="submit">
-              Update Profile
+            <button className="btn btn-primary" type="submit" disabled={savingProfile}>
+              {savingProfile ? "Saving..." : "Update Profile"}
             </button>
           </form>
 
@@ -192,8 +213,8 @@ function ProfilePage() {
                 setPasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))
               }
             />
-            <button className="btn btn-secondary" type="submit">
-              Change Password
+            <button className="btn btn-secondary" type="submit" disabled={savingPassword}>
+              {savingPassword ? "Updating..." : "Change Password"}
             </button>
             <Link className="btn btn-secondary" to="/transactions">
               View Transaction History
@@ -208,8 +229,13 @@ function ProfilePage() {
               <p className="muted">Monitor availability, reservation state, and pricing in one place.</p>
             </div>
           </div>
+          {loading ? (
+            <div className="panel-card">
+              <p className="muted">Loading your marketplace profile...</p>
+            </div>
+          ) : null}
           <div className="listing-grid single-column">
-            {listings.length ? (
+            {!loading && listings.length ? (
               listings.map((listing) => (
                 <article className="listing-card compact" key={listing._id}>
                   <div className="listing-image-wrap">
@@ -223,6 +249,11 @@ function ProfilePage() {
                     <span className={`tag status-${String(listing.status || "active").toLowerCase()}`}>
                       {listing.status}
                     </span>
+                    <span
+                      className={`tag visibility-${String(listing.visibility || "Visible").toLowerCase()}`}
+                    >
+                      {listing.visibility || "Visible"}
+                    </span>
                     {listing.sellerInsights?.trustScore ? (
                       <span className="trust-score-pill">Trust {listing.sellerInsights.trustScore}/100</span>
                     ) : null}
@@ -232,6 +263,9 @@ function ProfilePage() {
                   <p className="meta">Condition: {listing.condition}</p>
                   <p className="meta">Meetup: {listing.campusLocation?.name || "Flexible"}</p>
                   <p className="price">{formatVnd(listing.price)}</p>
+                  {listing.hiddenReason ? (
+                    <p className="admin-note warning-note">Moderation note: {listing.hiddenReason}</p>
+                  ) : null}
                   <div className="action-row">
                     <Link className="btn btn-primary" to={`/listing/${listing._id}/edit`}>
                       Edit
@@ -239,19 +273,20 @@ function ProfilePage() {
                     <button
                       className="btn btn-danger"
                       type="button"
+                      disabled={deletingListingId === listing._id}
                       onClick={() => deleteListing(listing._id)}
                     >
-                      Delete
+                      {deletingListingId === listing._id ? "Deleting..." : "Delete"}
                     </button>
                   </div>
                 </article>
               ))
-            ) : (
+            ) : !loading ? (
               <div className="empty-block">
                 <p>No listings found.</p>
-                <p className="muted">Click "Create Listing" to add a new item.</p>
+                <p className="muted">Use the floating + button to add your first listing.</p>
               </div>
-            )}
+            ) : null}
           </div>
         </section>
       </section>

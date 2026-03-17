@@ -11,6 +11,7 @@ const serializeUser = (user) => ({
   username: user.username,
   major: user.major,
   role: user.role,
+  status: user.status,
   profileImage: user.profileImage,
   rating: user.rating,
   totalRatings: user.totalRatings,
@@ -94,6 +95,14 @@ const login = async (req, res) => {
     }).select('+password');
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    if (user.status === 'Banned') {
+      return res.status(403).json({
+        message: user.banReason
+          ? `Your account has been suspended: ${user.banReason}`
+          : 'Your account has been suspended by an administrator',
+      });
     }
 
     // Check password
@@ -224,10 +233,18 @@ const refreshToken = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId).select(
-      'name email username major role profileImage rating'
+      'name email username major role status profileImage rating'
     );
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.status === 'Banned') {
+      return res.status(403).json({
+        message: user.banReason
+          ? `Your account has been suspended: ${user.banReason}`
+          : 'Your account has been suspended by an administrator',
+      });
     }
 
     const newToken = generateToken(user);

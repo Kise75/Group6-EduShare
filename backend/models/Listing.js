@@ -53,6 +53,25 @@ const listingSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    visibility: {
+      type: String,
+      enum: ['Visible', 'Hidden'],
+      default: 'Visible',
+    },
+    hiddenReason: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    hiddenAt: {
+      type: Date,
+      default: null,
+    },
+    hiddenBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     status: {
       type: String,
       enum: ['Active', 'Reserved', 'Sold'],

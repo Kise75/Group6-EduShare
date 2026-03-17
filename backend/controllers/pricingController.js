@@ -13,6 +13,7 @@ const getPriceSuggestion = async (req, res) => {
 
     const listings = await Listing.find({
       category: draft.category || { $exists: true },
+      visibility: { $ne: 'Hidden' },
     })
       .select('title category condition courseCode edition price status')
       .sort({ createdAt: -1 })

@@ -27,6 +27,25 @@ const reviewSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    status: {
+      type: String,
+      enum: ['Published', 'Hidden'],
+      default: 'Published',
+    },
+    moderationNote: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    moderatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    moderatedAt: {
+      type: Date,
+      default: null,
+    },
     meetup: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Meetup',

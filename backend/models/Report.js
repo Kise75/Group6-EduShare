@@ -34,8 +34,27 @@ const reportSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Open', 'Reviewed', 'Resolved'],
+      enum: ['Open', 'Reviewed', 'Resolved', 'Dismissed'],
       default: 'Open',
+    },
+    actionTaken: {
+      type: String,
+      enum: ['none', 'warning', 'listing-hidden', 'user-banned', 'dismissed'],
+      default: 'none',
+    },
+    resolutionNote: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    resolvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    resolvedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

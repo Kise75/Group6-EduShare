@@ -1202,6 +1202,137 @@ textarea:focus {
   flex-wrap: wrap;
 }
 
+.admin-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.admin-stat-card {
+  min-height: 132px;
+}
+
+.admin-section-card {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-section-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.admin-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 250px;
+}
+
+.admin-toolbar input,
+.admin-toolbar select {
+  min-width: 170px;
+}
+
+.admin-layout-expanded {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.admin-row-rich {
+  align-items: flex-start;
+}
+
+.admin-row-main {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-row-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-actions.stacked {
+  display: grid;
+  justify-items: stretch;
+}
+
+.admin-note {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(29, 113, 232, 0.08);
+  color: #264464;
+}
+
+.warning-note {
+  background: rgba(239, 127, 26, 0.12);
+  color: #8a4f09;
+}
+
+.error-note {
+  background: rgba(214, 55, 55, 0.12);
+  color: #8c2323;
+}
+
+.admin-loading-card {
+  margin-bottom: 18px;
+}
+
+.visibility-visible {
+  background: rgba(29, 113, 232, 0.12);
+  color: #0d5ec9;
+}
+
+.visibility-hidden,
+.status-hidden {
+  background: rgba(214, 55, 55, 0.14);
+  color: #a22727;
+}
+
+.status-banned {
+  background: rgba(214, 55, 55, 0.14);
+  color: #a22727;
+}
+
+.status-open {
+  background: rgba(239, 127, 26, 0.14);
+  color: #a45304;
+}
+
+.status-reviewed {
+  background: rgba(29, 113, 232, 0.12);
+  color: #0d5ec9;
+}
+
+.status-resolved,
+.status-published {
+  background: rgba(34, 197, 94, 0.12);
+  color: #1d7c42;
+}
+
+.status-dismissed {
+  background: rgba(148, 163, 184, 0.2);
+  color: #465568;
+}
+
+.action-tag {
+  background: rgba(94, 163, 255, 0.12);
+  color: #1b4e88;
+}
+
 @media (max-width: 980px) {
   .top-nav {
     grid-template-columns: 1fr;
@@ -1230,6 +1361,19 @@ textarea:focus {
   .profile-layout,
   .admin-layout {
     grid-template-columns: 1fr;
+  }
+
+  .admin-section-head {
+    flex-direction: column;
+  }
+
+  .admin-toolbar {
+    width: 100%;
+  }
+
+  .admin-toolbar input,
+  .admin-toolbar select {
+    flex: 1 1 180px;
   }
 
   .action-row {
@@ -1733,6 +1877,36 @@ textarea {
   color: #d1d8e5;
 }
 
+[data-theme="dark"] .status-banned,
+[data-theme="dark"] .status-hidden,
+[data-theme="dark"] .visibility-hidden {
+  background: rgba(248, 113, 113, 0.18);
+  color: #ffb6b6;
+}
+
+[data-theme="dark"] .status-open {
+  background: rgba(251, 191, 36, 0.18);
+  color: #ffd783;
+}
+
+[data-theme="dark"] .status-reviewed,
+[data-theme="dark"] .visibility-visible,
+[data-theme="dark"] .action-tag {
+  background: rgba(94, 163, 255, 0.18);
+  color: #b8d8ff;
+}
+
+[data-theme="dark"] .status-resolved,
+[data-theme="dark"] .status-published {
+  background: rgba(74, 222, 128, 0.18);
+  color: #b3f4c6;
+}
+
+[data-theme="dark"] .status-dismissed {
+  background: rgba(148, 163, 184, 0.18);
+  color: #d1d8e5;
+}
+
 [data-theme="dark"] .tag.role-user {
   background: rgba(94, 163, 255, 0.18);
   color: #b8d8ff;
@@ -1747,6 +1921,21 @@ textarea {
 [data-theme="dark"] .leaflet-popup-tip {
   background: #132138;
   color: #eef4ff;
+}
+
+[data-theme="dark"] .admin-note {
+  background: rgba(94, 163, 255, 0.12);
+  color: #d8e9ff;
+}
+
+[data-theme="dark"] .warning-note {
+  background: rgba(251, 191, 36, 0.12);
+  color: #ffe6a5;
+}
+
+[data-theme="dark"] .error-note {
+  background: rgba(248, 113, 113, 0.12);
+  color: #ffd0d0;
 }
 
 @media (max-width: 1180px) {

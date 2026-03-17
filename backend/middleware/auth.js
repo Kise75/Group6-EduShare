@@ -10,10 +10,18 @@ const authMiddleware = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('role');
+    const user = await User.findById(decoded.userId).select('role status banReason');
 
     if (!user) {
       return res.status(401).json({ message: 'User account no longer exists' });
+    }
+
+    if (user.status === 'Banned') {
+      return res.status(403).json({
+        message: user.banReason
+          ? `Your account has been suspended: ${user.banReason}`
+          : 'Your account has been suspended by an administrator',
+      });
     }
 
     req.userId = decoded.userId;

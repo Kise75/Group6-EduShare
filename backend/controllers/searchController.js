@@ -9,7 +9,10 @@ const searchListings = async (req, res) => {
     const { query, category, condition, minPrice, maxPrice, location, sortBy, page, limit } =
       req.query;
 
-    const filter = { status: { $in: ['Active', 'Reserved'] } };
+    const filter = {
+      status: { $in: ['Active', 'Reserved'] },
+      visibility: { $ne: 'Hidden' },
+    };
     const andClauses = [];
 
     if (query) {

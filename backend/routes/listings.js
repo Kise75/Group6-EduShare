@@ -10,6 +10,7 @@ const {
   releaseReservation,
 } = require('../controllers/listingController');
 const authMiddleware = require('../middleware/auth');
+const optionalAuth = require('../middleware/optionalAuth');
 const upload = require('../middleware/upload');
 
 const router = express.Router();
@@ -17,7 +18,7 @@ const router = express.Router();
 // Public routes
 router.get('/', getAllListings);
 router.get('/user/listings', authMiddleware, getUserListings);
-router.get('/:id', getListingById);
+router.get('/:id', optionalAuth, getListingById);
 
 // Protected routes
 router.post('/', authMiddleware, upload.array('images', 5), createListing);

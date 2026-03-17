@@ -3,7 +3,12 @@ const cloudinary = require('cloudinary').v2;
 const Listing = require('../models/Listing');
 const User = require('../models/User');
 const { createNotification, createNotificationPayload, createNotifications } = require('../services/notificationService');
-const { LISTING_STATUS, canReserveListing, canTransitionListingStatus } = require('../services/listingRulesService');
+const {
+  LISTING_STATUS,
+  LISTING_VISIBILITY,
+  canReserveListing,
+  canTransitionListingStatus,
+} = require('../services/listingRulesService');
 const { buildTrustMap } = require('../services/trustService');
 const { findCampusLocation } = require('../utils/campusLocations');
 
@@ -52,6 +57,19 @@ const enrichListing = async (listing) => {
     ...listingObject,
     sellerInsights: trustMap[String(sellerId)] || null,
   };
+};
+
+const canViewListing = (listing, requesterId, requesterRole) => {
+  if (!listing) {
+    return false;
+  }
+
+  if (listing.visibility !== LISTING_VISIBILITY.HIDDEN) {
+    return true;
+  }
+
+  const sellerId = listing.seller?._id || listing.seller;
+  return String(sellerId) === String(requesterId) || requesterRole === 'admin';
 };
 
 const notifyTrackedCourseCodes = async (listing) => {
@@ -130,7 +148,10 @@ const getAllListings = async (req, res) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const skip = (page - 1) * limit;
-    const marketplaceFilter = { status: { $in: [LISTING_STATUS.ACTIVE, LISTING_STATUS.RESERVED] } };
+    const marketplaceFilter = {
+      status: { $in: [LISTING_STATUS.ACTIVE, LISTING_STATUS.RESERVED] },
+      visibility: { $ne: LISTING_VISIBILITY.HIDDEN },
+    };
 
     const listings = await Listing.find(marketplaceFilter)
       .populate('seller', 'name rating profileImage emailVerified totalRatings')
@@ -208,6 +229,7 @@ const createListing = async (req, res) => {
       priceHistory: [{ amount: numericPrice }],
       images,
       seller: req.userId,
+      visibility: LISTING_VISIBILITY.VISIBLE,
       edition: edition || '',
       isbn: isbn || '',
       campusLocation: mapCampusLocation(campusLocation),
@@ -233,6 +255,10 @@ const getListingById = async (req, res) => {
       .populate('reservedBy', 'name email');
 
     if (!listing) {
+      return res.status(404).json({ message: 'Listing not found' });
+    }
+
+    if (!canViewListing(listing, req.userId, req.userRole)) {
       return res.status(404).json({ message: 'Listing not found' });
     }
 
@@ -276,6 +302,12 @@ const updateListing = async (req, res) => {
 
     if (hasPrice && (!Number.isFinite(numericPrice) || numericPrice < 1000)) {
       return res.status(400).json({ message: 'Price must be at least 1,000 VND' });
+    }
+
+    if (status === LISTING_STATUS.RESERVED && !listing.reservedBy && req.userRole !== 'admin') {
+      return res.status(400).json({
+        message: 'Reserved status can only be set through the reservation workflow',
+      });
     }
 
     if (status && !canTransitionListingStatus(listing.status, status)) {

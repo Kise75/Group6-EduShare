@@ -1,7 +1,7 @@
 const Review = require('../models/Review');
-const User = require('../models/User');
 const Meetup = require('../models/Meetup');
 const { createNotification, createNotificationPayload } = require('../services/notificationService');
+const { refreshUserRating } = require('../services/reviewMetricsService');
 
 // Create review
 const createReview = async (req, res) => {
@@ -62,13 +62,7 @@ const createReview = async (req, res) => {
     await review.save();
 
     // Update user rating
-    const reviews = await Review.find({ reviewee });
-    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
-
-    await User.findByIdAndUpdate(reviewee, {
-      rating: avgRating,
-      totalRatings: reviews.length,
-    });
+    await refreshUserRating(reviewee);
 
     await review.populate('reviewer', 'name profileImage');
     await createNotification(
@@ -97,7 +91,10 @@ const getUserReviews = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const reviews = await Review.find({ reviewee: userId })
+    const reviews = await Review.find({
+      reviewee: userId,
+      status: { $ne: 'Hidden' },
+    })
       .populate('reviewer', 'name profileImage')
       .sort({ createdAt: -1 });
 

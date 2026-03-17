@@ -5,18 +5,39 @@ import { formatVnd } from "../utils/formatCurrency";
 
 function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
+  const [reviewAvailability, setReviewAvailability] = useState({});
   const [activeReviewId, setActiveReviewId] = useState("");
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
+  const [loading, setLoading] = useState(true);
+  const [submittingReviewId, setSubmittingReviewId] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
+        setLoading(true);
         const response = await api.get("/meetups/history/me");
-        setTransactions(response.data || []);
+        const nextTransactions = response.data || [];
+        setTransactions(nextTransactions);
+
+        const completedMeetups = nextTransactions.filter((item) => item.status === "Completed");
+        const availabilityEntries = await Promise.all(
+          completedMeetups.map(async (item) => {
+            try {
+              const availabilityResponse = await api.get(`/reviews/can-review/${item._id}`);
+              return [item._id, availabilityResponse.data];
+            } catch (requestError) {
+              return [item._id, { canReview: false, reason: "Cannot verify review eligibility" }];
+            }
+          })
+        );
+
+        setReviewAvailability(Object.fromEntries(availabilityEntries));
       } catch (requestError) {
         setError(parseApiError(requestError, "Cannot load transaction history"));
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -31,6 +52,7 @@ function TransactionsPage() {
   const submitReview = async (meetupId) => {
     setError("");
     setSuccess("");
+    setSubmittingReviewId(meetupId);
     try {
       await api.post("/reviews", {
         meetupId,
@@ -39,8 +61,14 @@ function TransactionsPage() {
       });
       setSuccess("Review submitted.");
       setActiveReviewId("");
+      setReviewAvailability((prev) => ({
+        ...prev,
+        [meetupId]: { canReview: false, reason: "Already reviewed" },
+      }));
     } catch (requestError) {
       setError(parseApiError(requestError, "Cannot submit review"));
+    } finally {
+      setSubmittingReviewId("");
     }
   };
 
@@ -49,7 +77,11 @@ function TransactionsPage() {
       <h1>Transaction History</h1>
 
       <section className="transactions-list">
-        {transactions.length ? (
+        {loading ? (
+          <div className="panel-card">
+            <p className="muted">Loading transaction history...</p>
+          </div>
+        ) : transactions.length ? (
           transactions.map((item) => (
             <article key={item._id} className="transaction-card">
               <div>
@@ -81,9 +113,15 @@ function TransactionsPage() {
                   {item.status}
                 </span>
                 {item.status === "Completed" ? (
-                  <button className="btn btn-primary" type="button" onClick={() => openReview(item._id)}>
-                    Rate/Review
-                  </button>
+                  reviewAvailability[item._id]?.canReview ? (
+                    <button className="btn btn-primary" type="button" onClick={() => openReview(item._id)}>
+                      Rate/Review
+                    </button>
+                  ) : (
+                    <span className="admin-note">
+                      {reviewAvailability[item._id]?.reason || "Review unavailable"}
+                    </span>
+                  )
                 ) : null}
               </div>
 
@@ -113,8 +151,13 @@ function TransactionsPage() {
                     placeholder="Share your feedback..."
                   />
                   <div className="action-row">
-                    <button className="btn btn-primary" type="button" onClick={() => submitReview(item._id)}>
-                      Submit Review
+                    <button
+                      className="btn btn-primary"
+                      type="button"
+                      disabled={submittingReviewId === item._id}
+                      onClick={() => submitReview(item._id)}
+                    >
+                      {submittingReviewId === item._id ? "Submitting..." : "Submit Review"}
                     </button>
                     <button className="btn btn-secondary" type="button" onClick={() => setActiveReviewId("")}>
                       Cancel

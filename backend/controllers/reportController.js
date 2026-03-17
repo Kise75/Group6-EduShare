@@ -23,14 +23,34 @@ const createReport = async (req, res) => {
       if (!listing) {
         return res.status(404).json({ message: 'Listing not found' });
       }
-      listing.reportCount += 1;
-      await listing.save();
+      if (String(listing.seller?._id || listing.seller) === String(req.userId)) {
+        return res.status(400).json({ message: 'You cannot report your own listing' });
+      }
       targetUser = listing.seller;
     } else {
       targetUser = await User.findById(targetUserId);
       if (!targetUser) {
         return res.status(404).json({ message: 'User not found' });
       }
+      if (String(targetUser._id) === String(req.userId)) {
+        return res.status(400).json({ message: 'You cannot report your own account' });
+      }
+    }
+
+    const existingOpenReport = await Report.findOne({
+      reporter: req.userId,
+      targetListing: listing?._id || null,
+      targetUser: targetUser?._id || null,
+      status: { $in: ['Open', 'Reviewed'] },
+    });
+
+    if (existingOpenReport) {
+      return res.status(400).json({ message: 'You have already submitted a report for this target' });
+    }
+
+    if (listing) {
+      listing.reportCount += 1;
+      await listing.save();
     }
 
     const report = await Report.create({

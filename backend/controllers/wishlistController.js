@@ -7,6 +7,7 @@ const getWishlist = async (req, res) => {
   try {
     const user = await User.findById(req.userId).populate({
       path: 'savedListings',
+      match: { visibility: { $ne: 'Hidden' } },
       populate: { path: 'seller', select: 'name rating profileImage emailVerified' },
     });
 
