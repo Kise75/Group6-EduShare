@@ -1,0 +1,5 @@
+UI framework: React
+Build tool/dev server: Vite
+Router: react-router-dom
+Backend: Node.js + Express
+Database: MongoDB

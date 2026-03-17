@@ -1,0 +1,122 @@
+PAGES: 12
+
+
+--- PAGE 1 ---
+
+E d u S h a r e
+Mai Tấn Phát
+Lecturer : Vũ THị Hạnh
+
+--- PAGE 2 ---
+
+EduShare is a web app for students to sell, give, or borrow
+textbooks.
+ Users can search by course code, filter results, and view listings
+with photos.
+ They can chat with the seller and choose a campus meetup point.
+ After pickup, users can rate and review.
+Project Description
+
+--- PAGE 3 ---
+
+Login / Register / Forgot Password
+Users can
+log in with
+existing
+credentials,
+register for
+a new
+account, or
+reset their
+password.
+
+--- PAGE 4 ---
+
+Home Marketplace
+D i s p l a y s  a  f e e d  o f
+r e c e n t  l i s t i n g s
+w i t h  a  p r o m i n e n t
+s e a r c h  b a r  a n d
+n a v i g a t i o n  t o  k e y
+f e a t u r e s
+
+--- PAGE 5 ---
+
+Search Results
+Shows listings
+matching search
+criteria with
+filtering and sorting
+options on the left
+panel.
+
+--- PAGE 6 ---
+
+Listing Detail
+Presents
+comprehensive
+information about
+a specific listing,
+including images,
+condition, price,
+seller details, and
+action buttons.
+
+--- PAGE 7 ---
+
+Create/Edit Listing
+A form for users to
+create new listings
+or modify existing
+ones, including
+details, images,
+and meetup
+location.
+
+--- PAGE 8 ---
+
+Messages Inbox + Chat
+Displays a list of
+ongoing
+conversations
+and a real-time
+chat interface for
+direct
+communication
+between users.
+
+--- PAGE 9 ---
+
+Meetup Map
+Allows users to
+select a
+campus
+meetup
+location, date,
+and time for
+item exchange.
+
+--- PAGE 10 ---
+
+Profile / My Listings
+Users can view and
+manage their profile
+information, active
+listings, and access
+other account-
+related features
+
+--- PAGE 11 ---
+
+Transaction History + Rate/Review
+Shows a record of
+past transactions
+and allows users
+to rate and review
+other users after
+a completed
+meetup
+
+--- PAGE 12 ---
+
+Thanks for listening
