@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useI18n } from "../context/I18nContext";
 
-function FloatingCreateButton() {
+function FloatingCreateButton({ unreadMessages = "" }) {
   const { t } = useI18n();
 
   return (
@@ -17,6 +17,7 @@ function FloatingCreateButton() {
             strokeLinejoin="round"
           />
         </svg>
+        {unreadMessages ? <span className="floating-message-count">{unreadMessages}</span> : null}
       </Link>
       <Link to="/listing/new" className="floating-create-button" aria-label={t("nav.createListing")}>
         <svg viewBox="0 0 24 24" aria-hidden="true">

@@ -11,6 +11,8 @@ function SavedItemsPage() {
   const [savedItems, setSavedItems] = useState([]);
   const [trackedCourseCodes, setTrackedCourseCodes] = useState([]);
   const [alertFeed, setAlertFeed] = useState([]);
+  const [courseMatches, setCourseMatches] = useState([]);
+  const [alertSummary, setAlertSummary] = useState({ unreadCourseMatchCount: 0 });
   const [courseCode, setCourseCode] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
@@ -20,6 +22,10 @@ function SavedItemsPage() {
     try {
       if (!isAuthenticated) {
         setSavedItems(getSavedItems());
+        setTrackedCourseCodes([]);
+        setAlertFeed([]);
+        setCourseMatches([]);
+        setAlertSummary({ unreadCourseMatchCount: 0 });
         return;
       }
 
@@ -27,6 +33,8 @@ function SavedItemsPage() {
       setSavedItems(response.data.savedListings || []);
       setTrackedCourseCodes(response.data.trackedCourseCodes || []);
       setAlertFeed(response.data.alertFeed || []);
+      setCourseMatches(response.data.courseMatches || []);
+      setAlertSummary(response.data.alertSummary || { unreadCourseMatchCount: 0 });
     } catch (requestError) {
       setError(parseApiError(requestError, "Cannot load wishlist"));
     }
@@ -63,6 +71,7 @@ function SavedItemsPage() {
       setTrackedCourseCodes(response.data.trackedCourseCodes || []);
       setCourseCode("");
       setInfo("Course code alert added.");
+      await loadWishlist();
     } catch (requestError) {
       setError(parseApiError(requestError, "Cannot add tracked course code"));
     }
@@ -73,6 +82,7 @@ function SavedItemsPage() {
     try {
       const response = await api.delete(`/wishlist/course-codes/${targetCode}`);
       setTrackedCourseCodes(response.data.trackedCourseCodes || []);
+      await loadWishlist();
     } catch (requestError) {
       setError(parseApiError(requestError, "Cannot remove tracked course code"));
     }
@@ -99,6 +109,9 @@ function SavedItemsPage() {
         <section className="wishlist-layout">
           <div className="panel-card form-stack">
             <h2>Track a Course Code</h2>
+            <p className="muted">
+              Follow the course codes you care about and EduShare will notify you when matching books or notes are posted.
+            </p>
             <form className="inline-two" onSubmit={addTrackedCode}>
               <input
                 value={courseCode}
@@ -125,13 +138,26 @@ function SavedItemsPage() {
 
           <div className="panel-card">
             <h2>Alert Feed</h2>
+            {alertSummary.unreadCourseMatchCount ? (
+              <p className="muted">
+                {alertSummary.unreadCourseMatchCount} unread alert
+                {alertSummary.unreadCourseMatchCount === 1 ? "" : "s"} for tracked course codes.
+              </p>
+            ) : null}
             <div className="alert-feed">
               {alertFeed.length ? (
                 alertFeed.map((item) => (
                   <article key={item._id} className="alert-feed-item">
                     <strong>{item.title}</strong>
                     <p>{item.message}</p>
-                    <small>{new Date(item.createdAt).toLocaleString("vi-VN")}</small>
+                    <div className="alert-feed-meta">
+                      <small>{new Date(item.createdAt).toLocaleString("vi-VN")}</small>
+                      {item.link ? (
+                        <Link className="btn btn-secondary" to={item.link}>
+                          Open Listing
+                        </Link>
+                      ) : null}
+                    </div>
                   </article>
                 ))
               ) : (
@@ -141,6 +167,34 @@ function SavedItemsPage() {
           </div>
         </section>
       )}
+
+      {isAuthenticated ? (
+        <section className="course-match-section">
+          <div className="section-head">
+            <div>
+              <h2>New Matches For Your Course Codes</h2>
+              <p className="muted">
+                Fresh listings that match the course codes you are following, so you can jump on good books sooner.
+              </p>
+            </div>
+          </div>
+
+          {courseMatches.length ? (
+            <section className="listing-grid">
+              {courseMatches.map((listing) => (
+                <ListingCard key={listing._id} listing={listing} compact />
+              ))}
+            </section>
+          ) : (
+            <div className="empty-block">
+              <p>No fresh matches yet.</p>
+              <p className="muted">
+                Add a course code like MATH101 or CS101 and matching listings will show up here automatically.
+              </p>
+            </div>
+          )}
+        </section>
+      ) : null}
 
       {savedItems.length ? (
         <section className="listing-grid">

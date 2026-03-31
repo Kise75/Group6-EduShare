@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { normalizeTrackedCourseCodes } = require('../services/authService');
 
 const serializeUser = (user) => ({
   id: user._id,
@@ -37,7 +38,7 @@ const transporter = nodemailer.createTransport({
 // Register controller
 const register = async (req, res) => {
   try {
-    const { name, email, password, major } = req.body;
+    const { name, email, password, major, trackedCourseCodes } = req.body;
 
     // Validation
     if (!name || !email || !password) {
@@ -61,6 +62,7 @@ const register = async (req, res) => {
       password: hashedPassword,
       major: major || '',
       role: 'user',
+      trackedCourseCodes: normalizeTrackedCourseCodes(trackedCourseCodes),
     });
 
     await user.save();

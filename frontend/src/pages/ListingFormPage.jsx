@@ -103,6 +103,10 @@ function ListingFormPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleApplySuggestedPrice = (value) => {
+    handleChange("price", String(value || ""));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setBusy(true);
@@ -274,7 +278,13 @@ function ListingFormPage() {
         </form>
 
         <aside className="form-sidebar">
-          <PriceSuggestionCard suggestion={suggestion} loading={suggestionLoading} error={suggestionError} />
+          <PriceSuggestionCard
+            suggestion={suggestion}
+            loading={suggestionLoading}
+            error={suggestionError}
+            currentPrice={form.price}
+            onApplyPrice={handleApplySuggestedPrice}
+          />
           <div className="panel-card">
             <h3>Why this matters</h3>
             <p>

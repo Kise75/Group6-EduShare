@@ -1,7 +1,37 @@
 const Listing = require('../models/Listing');
 const { buildTrustMap } = require('../services/trustService');
+const { scoreListingForSearch } = require('../services/searchService');
 
 const buildRegex = (value) => new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+const compareCreatedAtDesc = (left, right) =>
+  new Date(right?.createdAt || 0).getTime() - new Date(left?.createdAt || 0).getTime();
+
+const sortMatchedListings = (left, right, sortBy) => {
+  if (sortBy === 'price-low') {
+    return (
+      (left.listing?.price || 0) - (right.listing?.price || 0) ||
+      right.match.score - left.match.score ||
+      compareCreatedAtDesc(left.listing, right.listing)
+    );
+  }
+
+  if (sortBy === 'price-high') {
+    return (
+      (right.listing?.price || 0) - (left.listing?.price || 0) ||
+      right.match.score - left.match.score ||
+      compareCreatedAtDesc(left.listing, right.listing)
+    );
+  }
+
+  if (sortBy === 'newest') {
+    return (
+      compareCreatedAtDesc(left.listing, right.listing) ||
+      right.match.score - left.match.score
+    );
+  }
+
+  return right.match.score - left.match.score || compareCreatedAtDesc(left.listing, right.listing);
+};
 
 // Search and filter listings
 const searchListings = async (req, res) => {
@@ -14,18 +44,6 @@ const searchListings = async (req, res) => {
       visibility: { $ne: 'Hidden' },
     };
     const andClauses = [];
-
-    if (query) {
-      const queryRegex = buildRegex(query);
-      andClauses.push({
-        $or: [
-          { title: { $regex: queryRegex } },
-          { description: { $regex: queryRegex } },
-          { courseCode: { $regex: queryRegex } },
-          { category: { $regex: queryRegex } },
-        ],
-      });
-    }
 
     if (location) {
       const locationRegex = buildRegex(location);
@@ -61,6 +79,50 @@ const searchListings = async (req, res) => {
     const limitNum = parseInt(limit) || 10;
     const skip = (pageNum - 1) * limitNum;
 
+    if (query) {
+      const listings = await Listing.find(filter).populate(
+        'seller',
+        'name rating profileImage emailVerified totalRatings'
+      );
+
+      const scoredListings = listings
+        .map((listing) => ({
+          listing,
+          match: scoreListingForSearch(
+            typeof listing.toObject === 'function' ? listing.toObject() : listing,
+            query
+          ),
+        }))
+        .filter((entry) => entry.match.matched);
+
+      const directMatches = scoredListings.filter((entry) => entry.match.isDirectMatch);
+      const matchedListings = (directMatches.length ? directMatches : scoredListings).sort((left, right) =>
+        sortMatchedListings(left, right, sortBy)
+      );
+      const paginatedMatches = matchedListings
+        .slice(skip, skip + limitNum)
+        .map((entry) => entry.listing);
+      const trustMap = await buildTrustMap(
+        paginatedMatches.map((listing) => listing.seller?._id).filter(Boolean)
+      );
+
+      return res.json({
+        listings: paginatedMatches.map((listing) => ({
+          ...(typeof listing.toObject === 'function' ? listing.toObject() : listing),
+          sellerInsights: trustMap[String(listing.seller?._id)] || null,
+        })),
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: matchedListings.length,
+          pages: Math.ceil(matchedListings.length / limitNum) || 1,
+        },
+        searchMeta: {
+          usedFuzzy: directMatches.length === 0 && matchedListings.length > 0,
+        },
+      });
+    }
+
     let sort = { createdAt: -1 };
     if (sortBy === 'price-low') {
       sort = { price: 1 };
@@ -88,7 +150,10 @@ const searchListings = async (req, res) => {
         page: pageNum,
         limit: limitNum,
         total,
-        pages: Math.ceil(total / limitNum),
+        pages: Math.ceil(total / limitNum) || 1,
+      },
+      searchMeta: {
+        usedFuzzy: false,
       },
     });
   } catch (error) {

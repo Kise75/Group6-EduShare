@@ -9,6 +9,7 @@ import MeetupPage from "./pages/MeetupPage";
 import MessagesPage from "./pages/MessagesPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProfilePage from "./pages/ProfilePage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SavedItemsPage from "./pages/SavedItemsPage";
 import SearchPage from "./pages/SearchPage";
 import TransactionsPage from "./pages/TransactionsPage";
@@ -17,6 +18,7 @@ function App() {
   return (
     <Routes>
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/" element={<HomePage />} />
       <Route path="/saved" element={<SavedItemsPage />} />
       <Route

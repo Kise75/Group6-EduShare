@@ -1,4 +1,4 @@
-# EduShare
+# EduShare: A Smart Web-Based Marketplace for University Students to Exchange Textbooks and Learning Materials
 
 EduShare is a student marketplace web application for buying, selling, lending, and giving away textbooks and study materials. This codebase keeps the original MERN-style architecture, then upgrades it into a stronger final academic project with recommendation logic, smart pricing, trust signals, meetup coordination, moderation workflows, and an admin dashboard.
 
@@ -28,7 +28,7 @@ EduShare is a student marketplace web application for buying, selling, lending, 
 
 ## Tech Stack
 
-- Frontend: React, React Router, Axios, Vite, Leaflet
+- Frontend: React, React Router, Axios, Vite, Bootstrap, Leaflet
 - Backend: Node.js, Express, MongoDB, Mongoose
 - Auth: JWT
 - Media: Cloudinary fallback to local upload paths
@@ -246,9 +246,10 @@ npm run build
 
 ## Repository Notes
 
-- Root GitHub repo: `https://github.com/Kise75/EduShare`
+- Root GitHub repo: `https://github.com/Kise75/Group6-EduShare`
 - `node_modules`, build output, and local secrets are excluded by `.gitignore`
 - Current branch: `main`
+- Requirement summary for three core scenarios: `PROJECT_FEATURE_SUMMARY.md`
 
 ## Submission Checklist
 

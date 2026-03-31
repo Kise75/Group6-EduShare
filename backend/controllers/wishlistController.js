@@ -11,23 +11,52 @@ const getWishlist = async (req, res) => {
       populate: { path: 'seller', select: 'name rating profileImage emailVerified' },
     });
 
-    const sellerIds = (user?.savedListings || []).map((listing) => listing.seller?._id).filter(Boolean);
+    const trackedCourseCodes = user?.trackedCourseCodes || [];
+    const [notifications, courseMatches, unreadCourseMatchCount] = await Promise.all([
+      Notification.find({
+        user: req.userId,
+        type: { $in: ['wishlist-match', 'price-drop', 'listing-status'] },
+      })
+        .sort({ createdAt: -1 })
+        .limit(8),
+      trackedCourseCodes.length
+        ? Listing.find({
+            seller: { $ne: req.userId },
+            courseCode: { $in: trackedCourseCodes },
+            status: { $in: ['Active', 'Reserved'] },
+            visibility: { $ne: 'Hidden' },
+          })
+            .populate('seller', 'name rating profileImage emailVerified')
+            .sort({ createdAt: -1 })
+            .limit(12)
+        : Promise.resolve([]),
+      Notification.countDocuments({
+        user: req.userId,
+        type: 'wishlist-match',
+        isRead: false,
+      }),
+    ]);
+
+    const sellerIds = [...(user?.savedListings || []), ...courseMatches]
+      .map((listing) => listing.seller?._id)
+      .filter(Boolean);
     const trustMap = await buildTrustMap(sellerIds);
-    const notifications = await Notification.find({
-      user: req.userId,
-      type: { $in: ['wishlist-match', 'price-drop', 'listing-status'] },
-    })
-      .sort({ createdAt: -1 })
-      .limit(8);
 
     res.json({
       savedListings: (user?.savedListings || []).map((listing) => ({
         ...(typeof listing.toObject === 'function' ? listing.toObject() : listing),
         sellerInsights: trustMap[String(listing.seller?._id)] || null,
       })),
-      trackedCourseCodes: user?.trackedCourseCodes || [],
+      trackedCourseCodes,
       preferredMeetupLocations: user?.preferredMeetupLocations || [],
       alertFeed: notifications,
+      alertSummary: {
+        unreadCourseMatchCount,
+      },
+      courseMatches: courseMatches.map((listing) => ({
+        ...(typeof listing.toObject === 'function' ? listing.toObject() : listing),
+        sellerInsights: trustMap[String(listing.seller?._id)] || null,
+      })),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

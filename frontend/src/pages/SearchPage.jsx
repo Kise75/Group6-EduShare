@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import ListingCard from "../components/ListingCard";
+import { ListingGridSkeleton } from "../components/SkeletonBlocks";
 import { useI18n } from "../context/I18nContext";
 import api, { parseApiError } from "../services/api";
 
@@ -17,12 +18,13 @@ const initialFilters = {
 function SearchPage() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const [filters, setFilters] = useState(initialFilters);
   const [listings, setListings] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, pages: 1 });
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [searchMeta, setSearchMeta] = useState({ usedFuzzy: false });
 
   const activeParams = useMemo(() => {
     const params = {
@@ -48,13 +50,16 @@ function SearchPage() {
     const fetchResults = async () => {
       setLoading(true);
       setError("");
+      setSearchMeta({ usedFuzzy: false });
       try {
         const response = await api.get("/search", { params: activeParams });
         setListings(response.data.listings || []);
         setPagination((prev) => ({
-          ...prev,
           pages: response.data.pagination?.pages || 1,
+          page: response.data.pagination?.page || prev.page,
+          total: response.data.pagination?.total || 0,
         }));
+        setSearchMeta(response.data.searchMeta || { usedFuzzy: false });
       } catch (requestError) {
         setError(parseApiError(requestError, "Cannot search listings"));
       } finally {
@@ -70,13 +75,38 @@ function SearchPage() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const resultSummary =
+    language === "vi"
+      ? `${pagination.total || 0} san pham phu hop`
+      : `${pagination.total || 0} matching listings`;
+  const resetFiltersLabel = language === "vi" ? "Dat lai bo loc" : "Reset filters";
+  const fuzzySummary =
+    language === "vi"
+      ? `Khong tim thay ket qua khop chinh xac cho "${query}". Dang hien thi ket qua gan dung.`
+      : `No exact matches found for "${query}". Showing close matches instead.`;
+  const hasActiveFilters = Object.entries(filters).some(([key, value]) => value !== initialFilters[key]);
+
   return (
     <AppShell>
       <h1>{t("searchPage.title", "", { query: query || t("searchPage.all") })}</h1>
 
       <section className="search-layout">
         <aside className="filter-panel">
-          <h2>{t("searchPage.filters")}</h2>
+          <div className="filter-panel-head">
+            <h2>{t("searchPage.filters")}</h2>
+            {hasActiveFilters ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setFilters(initialFilters);
+                  setPagination((prev) => ({ ...prev, page: 1 }));
+                }}
+              >
+                {resetFiltersLabel}
+              </button>
+            ) : null}
+          </div>
           <label>{t("searchPage.category")}</label>
           <select
             value={filters.category}
@@ -141,8 +171,15 @@ function SearchPage() {
         </aside>
 
         <div>
-          {loading ? <p className="muted">{t("searchPage.loading")}</p> : null}
+          <div className="search-results-head">
+            <strong>{resultSummary}</strong>
+            {searchMeta.usedFuzzy && query ? (
+              <p className="search-results-note">{fuzzySummary}</p>
+            ) : null}
+          </div>
           {error ? <p className="feedback error">{error}</p> : null}
+
+          {loading && !error ? <ListingGridSkeleton count={6} /> : null}
 
           {!loading && !error ? (
             <section className="listing-grid">

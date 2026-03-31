@@ -18,3 +18,9 @@ pnpm-debug.log*
 coverage/
 *.tmp
 *.temp
+docs/.diagram_build/
+docs/ppt_preview/
+docs/final_report_print.html
+docs/screenshots/
+docs/*.pdf
+docs/*.pptx
